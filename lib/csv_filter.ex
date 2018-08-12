@@ -3,16 +3,76 @@ defmodule CSVFilter do
   Documentation for CSVFilter.
   """
 
-  @doc """
-  Hello world.
+  def csv_filter(filter_path, file_path, target_file) do
+    title = file_path |> read_csv() |> Stream.take(1) |> Enum.to_list() |> List.flatten()
 
-  ## Examples
+    filters = set_filter(filter_path, title)
 
-      iex> CSVFilter.hello()
-      :world
+    file_path
+    |> read_csv()
+    |> Stream.map(&apply_filters(&1, filters))
+    |> Enum.to_list()
+    |> write_csv(target_file)
+  end
 
-  """
-  def hello do
-    :world
+  def apply_filters(data, filters) do
+    filters
+    |> Enum.map(&Enum.at(data, &1))
+  end
+
+  def set_filter(filter_path, title_line) do
+    common_filter = Enum.to_list(0..12)
+
+    title_idxs =
+      filter_path
+      |> read_csv()
+      |> Enum.to_list()
+      |> List.flatten()
+      |> Enum.reduce(common_filter, fn title, acc ->
+        idxs =
+          title_line
+          |> Enum.filter(&String.contains?(&1, title))
+          |> Enum.map(&Enum.find_index(title_line, fn title -> title == &1 end))
+          |> Enum.uniq()
+
+        idxs ++ acc
+      end)
+      |> Enum.sort()
+
+    set_idxs(title_idxs, title_line)
+  end
+
+  def set_idxs(title_idxs, title_line) do
+    IO.inspect(title_idxs)
+
+    title_idxs
+    |> Enum.reduce([], fn
+      x, acc when x <= 12 ->
+        [x | acc]
+
+      x, acc ->
+        {_, title_line} = Enum.split(title_line, x + 1)
+        {empty_title, _other} = Enum.split_while(title_line, &(&1 == ""))
+        Enum.to_list(x..(x + length(empty_title))) ++ acc
+    end)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  def read_csv(file_path) do
+    File.stream!(file_path)
+    |> CSV.decode!()
+  end
+
+  def write_csv(data, file_path) do
+    IO.inspect("writing")
+
+    file = File.open!(file_path, [:write, :utf8])
+
+    IO.write(file, "\uFEFF")
+
+    data
+    |> CSV.encode()
+    |> Enum.each(&IO.write(file, &1))
   end
 end
