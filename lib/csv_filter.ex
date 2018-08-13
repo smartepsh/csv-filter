@@ -4,6 +4,33 @@ defmodule CSVFilter do
   """
   use Artificery
 
+  alias Artificery.Console
+
+  command :example, "" do
+  end
+
+  command :start, "" do
+    argument :data_source_file, :string, "The data source file path (csv)", required: true
+    argument :target_file, :string, "Target file path", required: true
+    argument :filters_file, :string, "Filters file path (csv)", required: false
+    option :common_fields, :boolean, "include common fields or not"
+    option :async, :boolean, "single process or not"
+  end
+
+  def example(_, _) do
+    Console.notice "
+    ./csv_filter start [--async --common-fields] data_source_file target_file [filters_file]
+    "
+  end
+
+  def start(_argv, %{} = opts) do
+    data_source = Map.get(opts, :data_source_file) |> Path.expand("public")
+    data_file = Map.get(opts, :target_file) |> Path.expand("public")
+    filters_file = Map.get(opts, :filters_file) |> Path.expand("public")
+    csv_filter(filters_file, data_source, data_file)
+    Console.success "Done! The file path is #{data_file}"
+  end
+
   def csv_filter(filter_path, file_path, target_file) do
     title = file_path |> read_csv() |> Stream.take(1) |> Enum.to_list() |> List.flatten()
 
@@ -66,7 +93,7 @@ defmodule CSVFilter do
   end
 
   def write_csv(data, file_path) do
-    IO.inspect("writing")
+    IO.inspect("start writing")
 
     file = File.open!(file_path, [:write, :utf8])
 
