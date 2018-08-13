@@ -22,7 +22,9 @@ defmodule CSVFilter.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:csv, "~> 2.0.0"}
+      {:csv, "~> 2.0.0"},
+      {:distillery, "~> 2.0-rc.11"},
+      {:artificery, "~> 0.2.6"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
     ]
