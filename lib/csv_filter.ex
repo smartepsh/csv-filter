@@ -33,14 +33,21 @@ defmodule CSVFilter do
 
   def csv_filter(filter_path, file_path, target_file) do
     title = file_path |> read_csv() |> Stream.take(1) |> Enum.to_list() |> List.flatten()
+    IO.inspect("Read title line success!")
 
     filters = set_filter(filter_path, title)
+    IO.inspect("Set filters success!")
+
+    file = File.open!(target_file, [:write, :utf8])
+    IO.write(file, "\uFEFF")
+
+    IO.inspect("Start writing")
 
     file_path
     |> read_csv()
     |> Stream.map(&apply_filters(&1, filters))
-    |> Enum.to_list()
-    |> write_csv(target_file)
+    |> CSV.encode()
+    |> Enum.each(&IO.write(file, &1))
   end
 
   def apply_filters(data, filters) do
@@ -81,8 +88,6 @@ defmodule CSVFilter do
   end
 
   def set_idxs(title_idxs, title_line) do
-    IO.inspect(title_idxs)
-
     title_idxs
     |> Enum.reduce([], fn
       x, acc when x <= 12 ->
@@ -100,17 +105,5 @@ defmodule CSVFilter do
   def read_csv(file_path) do
     File.stream!(file_path)
     |> CSV.decode!()
-  end
-
-  def write_csv(data, file_path) do
-    IO.inspect("start writing")
-
-    file = File.open!(file_path, [:write, :utf8])
-
-    IO.write(file, "\uFEFF")
-
-    data
-    |> CSV.encode()
-    |> Enum.each(&IO.write(file, &1))
   end
 end
