@@ -61,7 +61,14 @@ defmodule CSVFilter do
           title_line
           |> Enum.with_index()
           |> Enum.filter(fn {node_title, _idx} ->
-            String.contains?(node_title, title)
+            case String.split(node_title, ")", parts: 2) do
+              [""] ->
+                false
+
+              [_, suffix] ->
+                [number | _] = String.split(suffix, ".")
+                number == title
+            end
           end)
           |> Enum.map(fn {_, idx} -> idx end)
           |> Enum.uniq()
