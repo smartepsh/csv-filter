@@ -2,6 +2,7 @@ defmodule CSVFilter do
   @moduledoc """
   Documentation for CSVFilter.
   """
+  use Artificery
 
   def csv_filter(filter_path, file_path, target_file) do
     title = file_path |> read_csv() |> Stream.take(1) |> Enum.to_list() |> List.flatten()
