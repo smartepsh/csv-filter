@@ -10,17 +10,17 @@ defmodule CSVFilter do
   end
 
   command :start, "" do
-    argument :data_source_file, :string, "The data source file path (csv)", required: true
-    argument :target_file, :string, "Target file path", required: true
-    argument :filters_file, :string, "Filters file path (csv)", required: false
-    option :common_fields, :boolean, "include common fields or not"
-    option :async, :boolean, "single process or not"
+    argument(:data_source_file, :string, "The data source file path (csv)", required: true)
+    argument(:target_file, :string, "Target file path", required: true)
+    argument(:filters_file, :string, "Filters file path (csv)", required: false)
+    option(:common_fields, :boolean, "include common fields or not")
+    option(:async, :boolean, "single process or not")
   end
 
   def example(_, _) do
-    Console.notice "
+    Console.notice("
     ./csv_filter start [--async --common-fields] data_source_file target_file [filters_file]
-    "
+    ")
   end
 
   def start(_argv, %{} = opts) do
@@ -28,7 +28,7 @@ defmodule CSVFilter do
     data_file = Map.get(opts, :target_file) |> Path.expand("public")
     filters_file = Map.get(opts, :filters_file) |> Path.expand("public")
     csv_filter(filters_file, data_source, data_file)
-    Console.success "Done! The file path is #{data_file}"
+    Console.success("Done! The file path is #{data_file}")
   end
 
   def csv_filter(filter_path, file_path, target_file) do
