@@ -59,8 +59,11 @@ defmodule CSVFilter do
       |> Enum.reduce(common_filter, fn title, acc ->
         idxs =
           title_line
-          |> Enum.filter(&String.contains?(&1, title))
-          |> Enum.map(&Enum.find_index(title_line, fn title -> title == &1 end))
+          |> Enum.with_index()
+          |> Enum.filter(fn {node_title, _idx} ->
+            String.contains?(node_title, title)
+          end)
+          |> Enum.map(fn {_, idx} -> idx end)
           |> Enum.uniq()
 
         idxs ++ acc
