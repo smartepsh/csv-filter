@@ -17,6 +17,11 @@ defmodule CSVFilter do
     option(:async, :boolean, "single process or not")
   end
 
+  command :export, "" do
+    argument(:data_source_file, :string, "", required: true)
+    argument(:target_file, :string, "Target file path", required: true)
+  end
+
   def example(_, _) do
     Console.notice("
     ./csv_filter start [--async --common-fields] data_source_file target_file [filters_file]
@@ -29,6 +34,62 @@ defmodule CSVFilter do
     filters_file = Map.get(opts, :filters_file) |> Path.expand("public")
     csv_filter(filters_file, data_source, data_file)
     Console.success("Done! The file path is #{data_file}")
+  end
+
+  def export(_argv, %{} = opts) do
+    file_path = Map.get(opts, :data_source_file) |> Path.expand("public")
+    brand_data_file = Path.expand("brand_words.csv", "public")
+    model_data_file = Path.expand("model_words.csv", "public")
+    do_export_1(file_path, brand_data_file)
+    do_export_2(file_path, model_data_file)
+    :ok
+    # Console.success("Done! The file path is #{data_file}")
+  end
+
+  defp do_export_1(file_path, target_file) do
+    file = File.open!(target_file, [:write, :utf8])
+    IO.write(file, "\uFEFF")
+
+    IO.inspect("Start writing brand")
+
+    file_path
+    |> read_csv()
+    |> Stream.drop(2)
+    |> Stream.map(&apply_exp(:brand, &1))
+    |> Stream.each(&Enum.each(&1, fn content -> IO.write(file, content) end))
+    |> Stream.run()
+  end
+
+  defp do_export_2(file_path, target_file) do
+    file = File.open!(target_file, [:write, :utf8])
+    IO.write(file, "\uFEFF")
+
+    IO.inspect("Start writing model")
+
+    file_path
+    |> read_csv()
+    |> Stream.drop(2)
+    |> Stream.map(&apply_exp(:model, &1))
+    |> Stream.each(&Enum.each(&1, fn content -> IO.write(file, content) end))
+    |> Stream.run()
+  end
+
+  def apply_exp(:brand, data) do
+    data
+    |> Enum.drop(13)
+    |> Enum.take(288)
+    |> Enum.chunk_every(4)
+    |> Enum.reject(&(hd(&1) == ""))
+    |> CSV.encode()
+  end
+
+  def apply_exp(:model, data) do
+    data
+    |> Enum.drop(301)
+    |> Enum.take(384)
+    |> Enum.chunk_every(4)
+    |> Enum.reject(&(hd(&1) == ""))
+    |> CSV.encode()
   end
 
   def csv_filter(filter_path, file_path, target_file) do
